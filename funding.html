@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Crypto Funding Rates (Perpetual Futures) – FuturesCalc</title><meta name="description" content="Live perpetual futures funding rates for USDT pairs, refreshed every minute. Sort by highest or lowest funding and see annualized rates."><link rel="canonical" href="https://thepancar.github.io/futurescalc/funding.html">
+<meta property="og:title" content="Live Crypto Funding Rates (Perpetual Futures) – FuturesCalc"><meta property="og:description" content="Live perpetual futures funding rates for USDT pairs, refreshed every minute. Sort by highest or lowest funding and see annualized rates."><link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>"></head>
+<body><header><a class="logo" href="index.html">FuturesCalc</a><nav><a href="index.html">Home</a><a href="position-size.html">Position Size</a><a href="liquidation.html">Liquidation</a><a href="pnl.html">PnL / ROE</a><a href="funding.html" class=on>Funding Rates</a></nav></header><main><h1>Live Funding Rates</h1><p class="lead">USDT perpetual funding rates, refreshed every 60 seconds. <span id="src"></span></p>
+<div class="bar"><input id="q" placeholder="Search symbol (e.g. BTC)" oninput="render()"><select id="sort" onchange="render()"><option value="abs">Sort: |rate| high→low</option><option value="desc">Highest rate</option><option value="asc">Lowest rate</option><option value="sym">Symbol A→Z</option></select></div>
+<div class="tablewrap"><table><thead><tr><th>Symbol</th><th>Mark price</th><th>Funding rate</th><th>Annualized*</th><th>Next funding</th></tr></thead><tbody id="tb"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
+<section class="info"><h2>What is funding?</h2><p>Perpetual futures use periodic funding payments to keep prices near spot. A positive rate means longs pay shorts; negative means shorts pay longs. *Annualized assumes three 8-hour periods per day at the current rate.</p></section></main>
+<footer><p>Free tools for crypto futures traders. Results are estimates, not financial advice. <a href="about.html">About &amp; Privacy</a></p></footer>
+<script src="calc.js"></script><script>let rows=[];async function load(){try{const r=await fetch('https://fapi.binance.com/fapi/v1/premiumIndex');if(!r.ok)throw 0;const d=await r.json();
+rows=d.filter(x=>x.symbol.endsWith('USDT')).map(x=>({s:x.symbol,p:+x.markPrice,f:+x.lastFundingRate,t:+x.nextFundingTime}));src.textContent='Source: Binance';}
+catch(e){try{const r=await fetch('https://api.bybit.com/v5/market/tickers?category=linear');const d=await r.json();
+rows=d.result.list.filter(x=>x.symbol.endsWith('USDT')&&x.fundingRate!=='').map(x=>({s:x.symbol,p:+x.markPrice,f:+x.fundingRate,t:+x.nextFundingTime}));src.textContent='Source: Bybit';}
+catch(e2){tb.innerHTML='<tr><td colspan=5>Could not load data. Please try again later.</td></tr>';return}}render()}
+function render(){const k=q.value.trim().toUpperCase(),o=sort.value;let a=rows.filter(x=>x.s.includes(k));
+a.sort(o==='abs'?(x,y)=>Math.abs(y.f)-Math.abs(x.f):o==='desc'?(x,y)=>y.f-x.f:o==='asc'?(x,y)=>x.f-y.f:(x,y)=>x.s.localeCompare(y.s));
+tb.innerHTML=a.slice(0,300).map(x=>`<tr><td>${x.s}</td><td>${num(x.p,x.p<1?6:2)}</td><td class="${x.f>=0?'good':'bad'}">${(x.f*100).toFixed(4)}%</td><td>${(x.f*100*1095).toFixed(1)}%</td><td>${x.t?new Date(x.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'–'}</td></tr>`).join('')||'<tr><td colspan=5>No matches</td></tr>'}
+load();setInterval(load,60000)</script></body></html>
